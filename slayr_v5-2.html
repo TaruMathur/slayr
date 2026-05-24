@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLAYR — Demon Elimination Pvt. Ltd.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0806;--surface:#110e0b;--surface2:#1a1410;--surface3:#221c14;
+  --border:rgba(180,120,40,0.22);--gold:#c9921a;--gold2:#f0c040;
+  --red:#c0392b;--red2:#e74c3c;--green:#27ae60;--green2:#2ecc71;
+  --blue2:#5dade2;--muted:#8a7a5a;--text:#e8dcc8;--danger:#c0392b;
+}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;min-height:100vh;overflow-x:hidden}
+input,select,textarea{
+  background:var(--surface2);border:0.5px solid var(--border);border-radius:6px;
+  color:var(--text);font-family:'Crimson Pro',serif;font-size:14px;
+  padding:8px 12px;outline:none;width:100%;transition:border-color .2s
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+select option{background:var(--surface2)}
+button{cursor:pointer;font-family:'Cinzel',serif;transition:all .15s}
+textarea{resize:vertical;min-height:60px;line-height:1.5}
+input[type=checkbox]{width:auto;padding:0}
+input[type=color]{width:100%;height:32px;padding:2px;background:var(--surface2);border:0.5px solid var(--border)}
+label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.hidden{display:none!important}
+
+/* ───── HEADER ───── */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;background:var(--surface);border-bottom:0.5px solid var(--border);
+  position:sticky;top:0;z-index:50
+}
+.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.logo{font-family:'Cinzel',serif;font-weight:900;font-size:18px;letter-spacing:4px;color:var(--gold2)}
+.logo em{color:var(--red2);font-style:normal}
+.logo-sub{font-size:8px;letter-spacing:4px;color:var(--muted);display:block;margin-top:-2px}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{border-radius:20px;padding:4px 12px;font-family:'Cinzel',serif;font-size:10px}
+.pill-gold{background:var(--surface2);border:0.5px solid var(--gold);color:var(--gold2)}
+.pill-user{background:var(--surface2);border:0.5px solid var(--border);color:var(--muted)}
+.pill-admin{background:rgba(192,57,43,.18);border:0.5px solid var(--red);color:var(--red2);letter-spacing:2px}
+.btn-outline-sm{background:transparent;border:0.5px solid var(--border);border-radius:5px;color:var(--muted);font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:5px 12px}
+.btn-outline-sm:hover{border-color:var(--gold);color:var(--gold2)}
+
+/* ───── TABS ───── */
+.tabs{display:flex;background:var(--surface);border-bottom:0.5px solid var(--border);position:sticky;top:49px;z-index:49}
+.tab{
+  flex:1;padding:10px 0;text-align:center;font-family:'Cinzel',serif;
+  font-size:9px;letter-spacing:2px;color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;transition:color .2s;background:none;border-left:none;border-right:none;border-top:none
+}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
+.tab.admin-t{color:#7a3030}
+.tab.admin-t.active{color:var(--red2);border-bottom-color:var(--red)}
+
+/* ───── MAIN ───── */
+.main{padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:16px}
+
+/* ───── SWIPE / CARDS ───── */
+.swipe-wrap{position:relative;width:320px;height:590px}
+.card-stack{position:relative;width:100%;height:100%}
+
+.card{
+  position:absolute;inset:0;border-radius:14px;overflow:hidden;
+  border:0.5px solid var(--border);background:var(--surface);
+  cursor:grab;user-select:none;display:flex;flex-direction:column;
+  will-change:transform;touch-action:none
+}
+.card:active{cursor:grabbing}
+.card.back-card{transform:scale(0.95) translateY(12px);z-index:1;pointer-events:none}
+.card.front-card{z-index:2}
+.card.fly-right{transform:translateX(140%) rotate(16deg)!important;transition:transform .4s cubic-bezier(.4,0,.2,1)!important}
+.card.fly-left{transform:translateX(-140%) rotate(-16deg)!important;transition:transform .4s cubic-bezier(.4,0,.2,1)!important}
+
+/* Portrait image zone */
+.card-img{width:100%;height:372px;flex-shrink:0;position:relative;overflow:hidden;background:var(--surface2)}
+.card-img canvas,.card-img img{position:absolute;inset:0;width:100%;height:100%}
+.card-img img{object-fit:cover;object-position:top center}
+.card-img::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:110px;
+  background:linear-gradient(to bottom,transparent,var(--surface));pointer-events:none;z-index:3
+}
+
+/* Badges */
+.cls-badge{
+  position:absolute;top:10px;right:10px;z-index:5;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;padding:3px 9px;border-radius:3px
+}
+.threat-badge{position:absolute;top:10px;left:10px;z-index:5;font-family:'Cinzel',serif;font-size:9px;font-weight:700;color:var(--red2);text-shadow:0 0 10px rgba(192,57,43,.7)}
+.b-epic{background:rgba(180,100,220,.35);color:#d8a4ff;border:0.5px solid rgba(180,100,220,.5)}
+.b-leg{background:rgba(201,146,26,.35);color:var(--gold2);border:0.5px solid rgba(201,146,26,.5)}
+.b-boss{background:rgba(192,57,43,.35);color:#ff9090;border:0.5px solid rgba(192,57,43,.5)}
+.b-prime{background:rgba(40,40,220,.4);color:#90b8ff;border:0.5px solid rgba(40,40,220,.5)}
+.b-found{background:rgba(46,204,113,.25);color:#90ffb8;border:0.5px solid rgba(46,204,113,.4)}
+
+/* Sold overlay */
+.sold-ov{
+  position:absolute;inset:0;background:rgba(10,8,6,.84);z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px
+}
+.sold-stamp{font-family:'Cinzel',serif;font-size:30px;font-weight:900;color:var(--red2);letter-spacing:5px;border:3px solid var(--red2);padding:6px 20px;border-radius:4px;transform:rotate(-12deg)}
+.sold-to-txt{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--muted)}
+
+/* Card body */
+.card-body{flex:1;padding:0 14px 14px;position:relative;z-index:4;margin-top:-50px}
+.card-name{font-family:'Cinzel',serif;font-size:17px;font-weight:700;color:var(--gold2);line-height:1.1;margin-bottom:2px;text-shadow:0 2px 12px rgba(0,0,0,.95)}
+.card-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-family:'Cinzel',serif}
+.card-attrs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px}
+.atag{font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(26,20,16,.9);border:0.5px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;letter-spacing:1px}
+.card-quote{font-style:italic;font-size:11px;color:var(--text);opacity:.78;border-left:2px solid var(--gold);padding-left:8px;margin-bottom:8px;line-height:1.4}
+.card-core{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px}
+.bid-row{display:flex;align-items:flex-end;justify-content:space-between}
+.bid-high strong{color:var(--gold2);font-family:'Cinzel',serif;font-size:15px;display:block;line-height:1}
+.bid-high span{font-size:9px;color:var(--muted)}
+.bid-cnt strong{color:var(--text);font-size:14px;display:block;text-align:right;line-height:1}
+.bid-cnt span{font-size:9px;color:var(--muted)}
+
+/* Swipe hints */
+.hint{position:absolute;top:18px;z-index:10;font-family:'Cinzel',serif;font-size:15px;font-weight:700;border:3px solid;padding:3px 10px;border-radius:4px;opacity:0;pointer-events:none;transition:opacity .1s}
+.hint-like{left:14px;color:var(--green2);border-color:var(--green2);transform:rotate(-10deg)}
+.hint-pass{right:14px;color:var(--red2);border-color:var(--red2);transform:rotate(10deg)}
+
+/* Action buttons */
+.actions{display:flex;gap:14px;align-items:center;justify-content:center}
+.abtn{
+  border-radius:50%;border:0.5px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  gap:2px;width:52px;height:52px;font-size:20px;color:var(--muted)
+}
+.abtn:hover{transform:scale(1.1)}
+.abtn-pass{border-color:rgba(192,57,43,.5);color:var(--red2);width:48px;height:48px}
+.abtn-pass:hover{background:rgba(192,57,43,.12)}
+.abtn-bid{width:60px;height:60px;border-color:var(--gold);color:var(--gold2)}
+.abtn-bid:hover{background:rgba(201,146,26,.12)}
+.abtn-wl{border-color:rgba(100,150,255,.4);color:#90b8ff;width:48px;height:48px}
+.abtn-wl:hover{background:rgba(100,150,255,.1)}
+.abtn-lbl{font-size:7px;letter-spacing:1px}
+
+.divider{height:0.5px;background:linear-gradient(90deg,transparent,var(--border),transparent);width:100%;max-width:320px;margin:2px auto}
+
+/* ───── PANELS ───── */
+.panel{width:100%;max-width:520px}
+.sec-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;padding-bottom:7px;border-bottom:0.5px solid var(--border)}
+.sec-title.red{color:var(--red2);border-color:rgba(192,57,43,.3)}
+.empty-msg{font-size:13px;color:var(--muted);text-align:center;padding:28px 0;font-style:italic}
+
+.row-item{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;margin-bottom:7px}
+.row-icon{font-size:24px;width:34px;text-align:center;flex-shrink:0}
+.row-info{flex:1;min-width:0}
+.row-name{font-family:'Cinzel',serif;font-size:11px;color:var(--gold2);margin-bottom:2px}
+.row-sub{font-size:10px;color:var(--muted);letter-spacing:1px}
+.row-right{text-align:right;flex-shrink:0}
+.row-val{font-family:'Cinzel',serif;font-size:14px;color:var(--gold2)}
+.row-lbl{font-size:9px;color:var(--muted);letter-spacing:1px}
+
+.st{font-size:8px;padding:2px 7px;border-radius:3px;font-family:'Cinzel',serif;letter-spacing:1px;display:inline-block;margin-top:3px}
+.st-lead{background:rgba(46,204,113,.2);color:var(--green2);border:0.5px solid rgba(46,204,113,.3)}
+.st-out{background:rgba(192,57,43,.2);color:var(--red2);border:0.5px solid rgba(192,57,43,.3)}
+.st-sold{background:rgba(192,57,43,.35);color:#ffbbbb;border:0.5px solid rgba(192,57,43,.6)}
+
+/* ───── MODALS ───── */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;
+  display:flex;align-items:flex-start;justify-content:center;padding:16px 12px;
+  overflow-y:auto
+}
+.modal-bg.hidden{display:none}
+.modal-box{background:var(--surface);border:0.5px solid var(--gold);border-radius:12px;width:100%;max-width:420px;margin-top:8px}
+.modal-box.red-bdr{border-color:var(--red)}
+.modal-box.editor-box{max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-box.editor-box::-webkit-scrollbar{width:4px}
+.modal-box.editor-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:0.5px solid var(--border)}
+.mtitle{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold2)}
+.mtitle.red{color:var(--red2)}
+.mclose{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;padding:2px 6px}
+.mclose:hover{color:var(--text)}
+.mbody{padding:18px}
+.mrow3{display:flex;gap:8px;margin-bottom:12px}
+.mrow3>*{flex:1;text-align:center}
+.mstat-lbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px}
+.mstat-val{font-family:'Cinzel',serif;font-size:15px;color:var(--gold2)}
+.m-divln{height:0.5px;background:var(--border);margin:4px 0 14px}
+.presets{display:flex;gap:5px;margin-bottom:12px}
+.preset-btn{flex:1;background:var(--surface2);border:0.5px solid var(--border);border-radius:4px;color:var(--muted);font-family:'Cinzel',serif;font-size:9px;padding:5px 2px;text-align:center}
+.preset-btn:hover{border-color:var(--gold);color:var(--gold2)}
+.merr{font-size:10px;color:var(--red2);min-height:16px;margin-bottom:8px;font-family:'Cinzel',serif;letter-spacing:1px}
+
+.btn-gold{width:100%;padding:11px;background:var(--gold);border:none;border-radius:6px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;font-weight:700;color:#0a0806}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-red{width:100%;padding:10px;background:var(--red);border:none;border-radius:6px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;font-weight:700;color:#fff}
+.btn-red:hover{background:var(--red2)}
+.btn-ghost{background:transparent;border:0.5px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Cinzel',serif;font-size:10px;padding:8px 14px}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
+.btn-ghost-red{background:transparent;border:0.5px solid rgba(192,57,43,.5);border-radius:6px;color:var(--red2);font-family:'Cinzel',serif;font-size:10px;padding:8px 14px}
+.btn-ghost-red:hover{background:rgba(192,57,43,.1)}
+
+.auth-tabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:16px}
+.auth-tab-btn{flex:1;padding:8px 0;text-align:center;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent}
+.auth-tab-btn.active{color:var(--gold2);border-bottom-color:var(--gold)}
+
+.acct-card{background:var(--surface);border:0.5px solid var(--gold);border-radius:10px;padding:16px;margin-bottom:14px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-box{background:var(--surface2);border-radius:6px;padding:10px;text-align:center}
+.stat-num{font-family:'Cinzel',serif;font-size:18px;color:var(--gold2)}
+.stat-lbl{font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:2px}
+.topup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.topup-btn{background:var(--surface2);border:0.5px solid var(--border);border-radius:5px;color:var(--muted);font-family:'Cinzel',serif;font-size:10px;padding:8px 3px;text-align:center}
+.topup-btn:hover{border-color:var(--gold);color:var(--gold2)}
+
+/* ───── ADMIN PANEL ───── */
+.admin-wrap{width:100%;max-width:700px}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.admin-stat{background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.admin-stat-num{font-family:'Cinzel',serif;font-size:22px}
+.admin-stat-lbl{font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:3px}
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:20px}
+.asset-adm-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;overflow:hidden}
+.asset-adm-card.is-sold{opacity:.65;border-color:rgba(192,57,43,.3)}
+.adm-img{width:100%;height:200px;position:relative;overflow:hidden;background:var(--surface2)}
+.adm-img canvas,.adm-img img{position:absolute;inset:0;width:100%;height:100%}
+.adm-img img{object-fit:cover;object-position:top center}
+.adm-sold-ov{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:5;display:flex;align-items:center;justify-content:center}
+.adm-sold-stamp{font-family:'Cinzel',serif;font-size:20px;font-weight:900;color:var(--red2);letter-spacing:4px;border:2px solid var(--red2);padding:4px 12px;border-radius:4px;transform:rotate(-10deg)}
+.adm-body{padding:11px 13px}
+.adm-name{font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);margin-bottom:3px}
+.adm-sub{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+.adm-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:8px}
+.adm-meta span b{color:var(--gold2);font-family:'Cinzel',serif}
+.adm-sold-lbl{font-family:'Cinzel',serif;font-size:8px;color:var(--red2);letter-spacing:2px;margin-bottom:6px}
+.adm-btn-row{display:flex;gap:6px}
+.adm-btn{flex:1;padding:7px 4px;background:transparent;border:0.5px solid var(--border);border-radius:5px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--muted)}
+.adm-btn:hover{border-color:var(--gold);color:var(--gold2)}
+.adm-btn.edit{border-color:rgba(201,146,26,.4);color:var(--gold)}
+.adm-btn.relist{border-color:rgba(46,204,113,.4);color:var(--green2)}
+.adm-btn.relist:hover{background:rgba(46,204,113,.08)}
+
+.bids-table{width:100%;border-collapse:collapse}
+.bids-table th{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--muted);text-align:left;padding:7px 10px;border-bottom:0.5px solid var(--border)}
+.bids-table td{padding:9px 10px;border-bottom:0.5px solid rgba(180,120,40,.08);font-size:12px;vertical-align:middle}
+.bids-table tr:hover td{background:var(--surface2)}
+
+/* ───── EDITOR PANEL ───── */
+.esec{padding:13px 17px;border-bottom:0.5px solid var(--border)}
+.esec:last-child{border-bottom:none}
+.esec-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--red2);text-transform:uppercase;margin-bottom:11px}
+.efield{margin-bottom:10px}
+.erow2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.toggle-group{display:flex;gap:5px;flex-wrap:wrap}
+.tog-btn{padding:5px 11px;background:var(--surface2);border:0.5px solid var(--border);border-radius:4px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--muted)}
+.tog-btn:hover{border-color:var(--muted);color:var(--text)}
+.tog-btn.act-gold{border-color:var(--gold);color:var(--gold2);background:rgba(201,146,26,.12)}
+.tog-btn.act-red{border-color:var(--red);color:var(--red2);background:rgba(192,57,43,.12)}
+
+.img-drop{border:1px dashed var(--border);border-radius:6px;padding:16px;text-align:center;position:relative;cursor:pointer}
+.img-drop:hover{border-color:var(--gold)}
+.img-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.img-drop-preview{width:100%;height:150px;object-fit:cover;object-position:top center;border-radius:4px;margin-bottom:8px;display:block}
+
+.cs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cs-tile{background:var(--surface2);border:0.5px solid var(--border);border-radius:4px;padding:5px 4px;cursor:pointer}
+.cs-tile:hover{border-color:var(--muted)}
+.cs-tile canvas{display:block;width:100%;border-radius:2px}
+.cs-tile-lbl{font-family:'Cinzel',serif;font-size:7px;color:var(--muted);text-align:center;margin-top:3px;letter-spacing:1px}
+.cs-tile.sel{border-color:var(--gold)}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--surface);border:0.5px solid var(--gold);border-radius:8px;
+  padding:9px 20px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  color:var(--gold2);z-index:200;opacity:0;transition:opacity .3s;
+  pointer-events:none;white-space:nowrap
+}
+.toast.show{opacity:1}
+
+.empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);text-align:center;padding:24px}
+.empty-icon{font-size:44px;margin-bottom:14px}
+.empty-title{font-family:'Cinzel',serif;font-size:15px;color:var(--gold2);margin-bottom:8px}
+.empty-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div>
+    <div class="logo">SL<em>A</em>YR</div>
+    <span class="logo-sub">DEMON ELIMINATION PVT. LTD.</span>
+  </div>
+  <div class="hdr-right" id="hdr-right">
+    <div class="pill pill-gold hidden" id="hdr-credits"></div>
+    <div class="pill pill-user hidden" id="hdr-user"></div>
+    <div class="pill pill-admin hidden" id="hdr-admin">⚔ ADMIN</div>
+    <button class="btn-outline-sm" id="hdr-auth-btn" onclick="openModal('modal-auth')">LOGIN / REGISTER</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabs" id="main-tabs">
+  <button class="tab active" data-tab="discover" onclick="switchTab('discover')">DISCOVER</button>
+  <button class="tab" data-tab="bids" onclick="switchTab('bids')">MY BIDS</button>
+  <button class="tab" data-tab="watchlist" onclick="switchTab('watchlist')">WATCHLIST</button>
+  <button class="tab" data-tab="account" onclick="switchTab('account')">ACCOUNT</button>
+  <button class="tab admin-t hidden" data-tab="admin" id="tab-admin-btn" onclick="switchTab('admin')">⚔ ADMIN</button>
+</nav>
+
+<!-- MAIN -->
+<main class="main" id="main">
+
+  <!-- DISCOVER -->
+  <div id="tab-discover" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div class="swipe-wrap">
+      <div class="card-stack" id="card-stack">
+        <div class="hint hint-like" id="hint-like">BID ✓</div>
+        <div class="hint hint-pass" id="hint-pass">PASS ✕</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="actions">
+      <button class="abtn abtn-pass" onclick="doPass()" title="Pass">✕</button>
+      <button class="abtn abtn-bid" onclick="onBidClick()" title="Place Bid">
+        <span style="font-size:22px">⚔</span>
+        <span class="abtn-lbl">BID</span>
+      </button>
+      <button class="abtn abtn-wl" onclick="doWatchlist()" title="Watchlist">🔖</button>
+    </div>
+    <div style="font-size:9px;color:var(--muted);letter-spacing:2px;font-family:'Cinzel',serif">SWIPE RIGHT TO BID · LEFT TO PASS</div>
+  </div>
+
+  <!-- MY BIDS -->
+  <div id="tab-bids" class="panel hidden">
+    <div class="sec-title">Active Bids</div>
+    <div id="bids-list"></div>
+  </div>
+
+  <!-- WATCHLIST -->
+  <div id="tab-watchlist" class="panel hidden">
+    <div class="sec-title">Watchlist</div>
+    <div id="watchlist-list"></div>
+  </div>
+
+  <!-- ACCOUNT -->
+  <div id="tab-account" class="panel hidden">
+    <div id="account-body"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="tab-admin" class="admin-wrap hidden">
+    <div class="sec-title red">⚔ ASSET MANAGEMENT — MODERATOR PANEL</div>
+    <div class="admin-stats" id="admin-stats"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <div class="sec-title" style="margin-bottom:0; border-bottom:none;">Assets <span style="color:var(--muted);font-size:8px;letter-spacing:1px">(CLICK EDIT TO MODIFY)</span></div>
+      <button class="btn-outline-sm" style="border-color: var(--gold); color: var(--gold2);" onclick="openEditor(null)">+ ADD NEW ASSET</button>
+    </div>
+    <div class="asset-grid" id="asset-grid"></div>
+    <div class="sec-title">All Dynamic User Bids</div>
+    <div id="admin-bids-wrap" style="overflow-x:auto"></div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODALS -->
+<!-- AUTH -->
+<div class="modal-bg hidden" id="modal-auth">
+  <div class="modal-box">
+    <div class="mhdr">
+      <span class="mtitle">SLAYER REGISTRATION</span>
+      <button class="mclose" onclick="closeModal('modal-auth')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="at-login" onclick="authSwitchTab('login')">LOGIN</button>
+        <button class="auth-tab-btn" id="at-reg" onclick="authSwitchTab('register')">REGISTER</button>
+      </div>
+      <div id="auth-login-form">
+        <div class="efield"><label>Username</label><input type="text" id="li-user" placeholder="Enter username" autocomplete="username"></div>
+        <div class="efield"><label>Password</label><input type="password" id="li-pass" placeholder="Enter password" autocomplete="current-password"></div>
+        <div class="merr" id="li-err"></div>
+        <button class="btn-gold" onclick="doLogin()">LOGIN TO SLAYR</button>
+      </div>
+      <div id="auth-reg-form" class="hidden">
+        <div class="efield"><label>Username</label><input type="text" id="reg-user" placeholder="Min 3 characters" autocomplete="username"></div>
+        <div class="efield"><label>Password</label><input type="password" id="reg-pass" placeholder="Min 6 characters" autocomplete="new-password"></div>
+        <div class="efield">
+          <label>Starting Credits</label>
+          <div class="topup-grid" style="margin-bottom:7px">
+            <div class="topup-btn" onclick="setRC(500)">500 ◈</div>
+            <div class="topup-btn" onclick="setRC(2000)">2,000 ◈</div>
+            <div class="topup-btn" onclick="setRC(5000)">5,000 ◈</div>
+            <div class="topup-btn" onclick="setRC(25000)">25,000 ◈</div>
+          </div>
+          <input type="number" id="reg-credits" placeholder="Custom amount (min 200)" min="200">
+        </div>
+        <div class="merr" id="reg-err"></div>
+        <button class="btn-gold" onclick="doRegister()">CREATE ACCOUNT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BID MODAL -->
+<div class="modal-bg hidden" id="modal-bid">
+  <div class="modal-box">
+    <div class="mhdr">
+      <span class="mtitle">PLACE BID — CLASSIFIED ASSET</span>
+      <button class="mclose" onclick="closeModal('modal-bid')">✕</button>
+    </div>
+    <div class="mbody">
+      <div id="bid-asset-name" style="font-family:'Cinzel',serif;font-size:19px;font-weight:700;color:var(--gold2);margin-bottom:2px"></div>
+      <div id="bid-asset-sub" style="font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:16px;font-family:'Cinzel',serif"></div>
+      <div class="mrow3">
+        <div><span class="mstat-lbl">Min Bid</span><span class="mstat-val" id="bid-min"></span></div>
+        <div><span class="mstat-lbl">Current High</span><span class="mstat-val" id="bid-high"></span></div>
+        <div><span class="mstat-lbl">Your Balance</span><span class="mstat-val" id="bid-bal"></span></div>
+      </div>
+      <div class="m-divln"></div>
+      <div class="efield">
+        <label>Enter Bid Amount (Max Limit: 1,750 ◈)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="bid-input" min="200" max="1750" style="flex:1">
+          <span style="font-family:'Cinzel',serif;font-size:11px;color:var(--muted)">◈ CREDITS</span>
+        </div>
+      </div>
+      <div class="presets" id="bid-presets"></div>
+      <div class="merr" id="bid-err"></div>
+      <button class="btn-gold" onclick="submitBid()">CONFIRM BID</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR MODAL -->
+<div class="modal-bg hidden" id="modal-editor">
+  <div class="modal-box red-bdr editor-box">
+    <div class="mhdr" style="border-bottom-color:rgba(192,57,43,.3)">
+      <span class="mtitle red">✏ EDIT ASSET — ADMIN</span>
+      <button class="mclose" onclick="closeModal('modal-editor')">✕</button>
+    </div>
+    <div id="editor-body"></div>
+  </div>
+</div>
+
+<script>
+const CS_STYLES = ['water','moon','lily','sun','blade','castle','breath','flame'];
+const CLS_LIST = ['EPIC','LEGENDARY','LEGENDARY PRIME','BOSS LEVEL','FOUNDATION'];
+const THR_LIST = ['S','SS','SSS','SSSS','SSSSS'];
+
+const CLS_BADGE = {
+  'EPIC':'b-epic','LEGENDARY':'b-leg','LEGENDARY PRIME':'b-prime',
+  'BOSS LEVEL':'b-boss','FOUNDATION':'b-found'
+};
+
+const DEFAULT_ASSETS = [
+  {id:'urokodaki',name:'Sakonji Urokodaki',subtitle:"Water Hashira's Mentor",cls:'EPIC',threat:'SSS',core:'Discipline · Protection · Resolve',quote:"A master who teaches not just swordsmanship, but the way of a human.",attrs:['Human/Swordsman','Legendary Mentor'],cs:'water',c1:'#0a1a3a',c2:'#1a3a6a',c3:'#3a6aaa',img:'',emoji:'💧',minBid:200,currentHigh:850,sold:false,soldTo:''},
+  {id:'kokushibo',name:'Kokushibo',subtitle:'Upper Moon One',cls:'LEGENDARY PRIME',threat:'SSSS',core:'Dominance · Perfection · Transcendence',quote:"I don't fear death. I fear being surpassed.",attrs:['Demon/Swordsman','Moon Breathing'],cs:'moon',c1:'#1a0a2a',c2:'#3a1a5a',c3:'#6a2a9a',img:'',emoji:'🌑',minBid:200,currentHigh:1100,sold:false,soldTo:''},
+  {id:'yoriichi',name:'Yoriichi Tsugikuni',subtitle:'The Blueprint of Perfection',cls:'BOSS LEVEL',threat:'SSSSS',core:'Perfection · Humility · Legacy',quote:"I don't seek victory. I seek to protect the lives before me.",attrs:['Human/Boss Level','Sun Breathing'],cs:'sun',c1:'#200a00',c2:'#501800',c3:'#903000',img:'',emoji:'☀️',minBid:200,currentHigh:1400,sold:false,soldTo:''}
+];
+
+function loadData(k, def) { try { const r=localStorage.getItem(k); return r?JSON.parse(r):def; }catch{return def;} }
+function saveData(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+function saveAssets() { saveData('slayr_assets', STATE.assets); }
+function saveUsers() { saveData('slayr_users', STATE.users); }
+function saveSession(uname) { localStorage.setItem('slayr_session_user', uname); }
+function loadSession() { return localStorage.getItem('slayr_session_user') || null; }
+function clearSession() { localStorage.removeItem('slayr_session_user'); }
+
+let STATE = {
+  assets: loadData('slayr_assets', DEFAULT_ASSETS),
+  users: loadData('slayr_users', {
+    'admin': {username:'admin',password:'slayer123',credits:9999999,watchlist:[],isAdmin:true},
+    'tanjiro': {username:'tanjiro',password:'nezuko',credits:3200,watchlist:[],isAdmin:false}
+  }),
+  bids: loadData('slayr_bids', {}),
+  session: null,
+  cardIdx: 0,
+  bidTarget: null,
+  editor: { asset: null, attrs: [], img: null, isNew: false }
+};
+
+(function restoreSession() {
+  const uname = loadSession();
+  if (uname && STATE.users[uname]) STATE.session = STATE.users[uname];
+})();
+
+function activeAssets() { return STATE.assets.filter(a => !a.sold); }
+function getHighBid(assetId) { const asset = STATE.assets.find(a => a.id === assetId); return asset ? asset.currentHigh : 0; }
+function getTopBid(assetId) { return STATE.bids[assetId] || null; }
+
+// DRAW CANVAS BACKGROUNDS
+function drawCanvas(canvas, asset) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.fillStyle = asset.c1 || '#0a0806';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w/2, cy = h * 0.44;
+  const s = asset.cs || 'water';
+  const c3 = asset.c3 || '#3a6aaa';
+
+  if (s === 'water') {
+    for (let i=0;i<7;i++){ctx.beginPath();ctx.arc(cx,cy,h*.07+i*h*.07,0,Math.PI*2);ctx.strokeStyle=`rgba(60,120,200,${.34-i*.04})`;ctx.lineWidth=1.8;ctx.stroke();}
+    ctx.fillStyle=c3;ctx.font=`bold ${Math.floor(h*.26)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('水',cx,cy);
+  } else if (s === 'moon') {
+    ctx.fillStyle=c3;ctx.font=`bold ${Math.floor(h*.22)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('黒',cx,cy);
+  } else if (s === 'lily') {
+    ctx.fillStyle='#ff3364';ctx.font=`bold ${Math.floor(h*.16)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🌸',cx,cy);
+  } else if (s === 'sun') {
+    let g = ctx.createRadialGradient(cx,cy,5,cx,cy,h*.45); g.addColorStop(0,'#fff2a3'); g.addColorStop(1,asset.c1);
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(255,230,150,0.8)';ctx.font=`bold ${Math.floor(h*.28)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('日',cx,cy);
+  } else {
+    ctx.fillStyle=c3;ctx.font=`bold ${Math.floor(h*.25)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(asset.emoji||'⚔️',cx,cy);
+  }
+}
+
+// CARDS SYSTEM
+function renderCards() {
+  const stack = document.getElementById('card-stack');
+  if (!stack) return;
+  const hints = stack.querySelectorAll('.hint');
+  stack.innerHTML = '';
+  hints.forEach(h => stack.appendChild(h));
+
+  const pool = activeAssets();
+  if (pool.length === 0 || STATE.cardIdx >= pool.length) {
+    stack.appendChild(buildEmptyState()); return;
+  }
+
+  if (STATE.cardIdx + 1 < pool.length) {
+    stack.appendChild(buildCard(pool[STATE.cardIdx + 1], false));
+  }
+  const topCard = buildCard(pool[STATE.cardIdx], true);
+  stack.appendChild(topCard);
+
+  requestAnimationFrame(() => {
+    pool.slice(STATE.cardIdx, STATE.cardIdx+2).forEach(asset => {
+      if (!asset.img) { const cv = document.getElementById('cv-' + asset.id); if (cv) drawCanvas(cv, asset); }
+    });
+  });
+}
+
+function buildCard(asset, isFront) {
+  const card = document.createElement('div');
+  card.className = 'card ' + (isFront ? 'front-card' : 'back-card');
+  if (isFront) card.id = 'front-card';
+
+  const bc = CLS_BADGE[asset.cls] || 'b-epic';
+  const high = getHighBid(asset.id);
+
+  card.innerHTML = `
+    <div class="card-img" style="background:${asset.c1}">
+      ${asset.img ? `<img src="${asset.img}" alt="${asset.name}">` : `<canvas id="cv-${asset.id}" width="320" height="372"></canvas>`}
+      <span class="cls-badge ${bc}">${asset.cls}</span>
+      <div class="threat-badge">⚠ ${asset.threat}</div>
+    </div>
+    <div class="card-body">
+      <div class="card-name">${asset.name}</div>
+      <div class="card-sub">${asset.subtitle}</div>
+      <div class="card-attrs">${(asset.attrs||[]).map(a=>`<span class="atag">${a}</span>`).join('')}</div>
+      <div class="card-quote">"${asset.quote}"</div>
+      <div class="card-core">${asset.core}</div>
+      <div class="bid-row">
+        <div class="bid-high"><strong>${high.toLocaleString()} ◈</strong><span>Current High</span></div>
+      </div>
+    </div>`;
+
+  if (isFront) attachSwipe(card);
+  return card;
+}
+
+function buildEmptyState() {
+  const el = document.createElement('div'); el.className = 'empty-state';
+  el.innerHTML = `<div class="empty-icon">👺</div><div class="empty-title">ALL DEMONS BROWSED</div><button class="btn-gold" style="width:auto;padding:8px 22px" onclick="STATE.cardIdx=0;renderCards();">RELOAD</button>`;
+  return el;
+}
+
+function attachSwipe(el) {
+  let startX = 0, currentX = 0, active = false;
+  const hLike = document.getElementById('hint-like');
+  const hPass = document.getElementById('hint-pass');
+
+  function start(x) { startX = x; active = true; el.style.transition = 'none'; }
+  function move(x) {
+    if (!active) return;
+    currentX = x - startX;
+    el.style.transform = `translateX(${currentX}px) rotate(${currentX/16}deg)`;
+    if (currentX > 30) { hLike.style.opacity = Math.min(currentX/120, 1); hPass.style.opacity = 0; }
+    else if (currentX < -30) { hPass.style.opacity = Math.min(-currentX/120, 1); hLike.style.opacity = 0; }
+  }
+  function end() {
+    if (!active) return; active = false; hLike.style.opacity = 0; hPass.style.opacity = 0;
+    if (currentX > 110) { el.classList.add('fly-right'); setTimeout(() => { onBidClick(); renderCards(); }, 250); }
+    else if (currentX < -110) { el.classList.add('fly-left'); setTimeout(() => { doPass(); }, 250); }
+    else { el.style.transition = 'transform 0.25s'; el.style.transform = ''; }
+    currentX = 0;
+  }
+  el.addEventListener('mousedown', e => start(e.clientX));
+  window.addEventListener('mousemove', e => move(e.clientX));
+  window.addEventListener('mouseup', end);
+  el.addEventListener('touchstart', e => start(e.touches[0].clientX));
+  el.addEventListener('touchmove', e => move(e.touches[0].clientX));
+  el.addEventListener('touchend', end);
+}
+
+function doPass() { STATE.cardIdx++; renderCards(); }
+function doWatchlist() {
+  if (!STATE.session) { toast('Login required'); return; }
+  const pool = activeAssets(); if (STATE.cardIdx >= pool.length) return;
+  const asset = pool[STATE.cardIdx];
+  if (!STATE.session.watchlist.find(x=>x.id===asset.id)) { STATE.session.watchlist.push(asset); saveUsers(); toast('Added! ✓'); }
+}
+
+// BIDS SYSTEM WITH 1,750 MAXIMUM CAP LIMIT
+function onBidClick() {
+  const pool = activeAssets(); if (STATE.cardIdx >= pool.length) return;
+  if (!STATE.session) { openModal('modal-auth'); return; }
+  openBidFor(pool[STATE.cardIdx]);
+}
+
+function openBidFor(asset) {
+  STATE.bidTarget = asset; const high = getHighBid(asset.id); const minNext = Math.max(asset.minBid, high + 50);
+  document.getElementById('bid-asset-name').textContent = asset.name;
+  document.getElementById('bid-asset-sub').textContent = asset.subtitle;
+  document.getElementById('bid-min').textContent = asset.minBid + ' ◈';
+  document.getElementById('bid-high').textContent = high + ' ◈';
+  document.getElementById('bid-bal').textContent = STATE.session.credits + ' ◈';
+  document.getElementById('bid-input').value = Math.min(minNext, 1750);
+  
+  const presets = [minNext, minNext + 200, minNext + 400].filter(v => v <= 1750);
+  document.getElementById('bid-presets').innerHTML = presets.map(v=>`<button class="preset-btn" onclick="document.getElementById('bid-input').value=${v}">${v} ◈</button>`).join('');
+  document.getElementById('bid-err').textContent = '';
+  openModal('modal-bid');
+}
+
+function submitBid() {
+  const asset = STATE.bidTarget; if (!asset || !STATE.session) return;
+  const amt = parseInt(document.getElementById('bid-input').value);
+  const high = getHighBid(asset.id);
+
+  if (isNaN(amt) || amt < asset.minBid) { document.getElementById('bid-err').textContent = `Minimum bid required is ${asset.minBid} ◈`; return; }
+  if (amt <= high) { document.getElementById('bid-err').textContent = 'Bid must strictly exceed the current highest standing offer.'; return; }
+  
+  // STRICT AUDIT: ENFORCE CAPPED MAXIMUM LIMIT CRITERIA TO 1,750
+  if (amt > 1750) { document.getElementById('bid-err').textContent = 'Transaction Denied: Maximum permissible bid limit is 1,750 ◈.'; return; }
+  if (amt > STATE.session.credits) { document.getElementById('bid-err').textContent = 'Insufficient ledger asset token registry balances.'; return; }
+
+  STATE.bids[asset.id] = { assetId: asset.id, username: STATE.session.username, amount: amt, timestamp: Date.now() };
+  asset.currentHigh = amt;
+  saveAssets(); saveData('slayr_bids', STATE.bids);
+  toast('Bid registered successfully!'); closeModal('modal-bid'); renderCards();
+}
+
+// AUTH
+function authSwitchTab(m) {
+  document.getElementById('at-login').classList.toggle('active', m==='login');
+  document.getElementById('at-reg').classList.toggle('active', m==='register');
+  document.getElementById('auth-login-form').classList.toggle('hidden', m!=='login');
+  document.getElementById('auth-reg-form').classList.toggle('hidden', m!=='register');
+}
+function setRC(v) { document.getElementById('reg-credits').value = v; }
+function doLogin() {
+  const u = document.getElementById('li-user').value.trim(), p = document.getElementById('li-pass').value;
+  if(STATE.users[u] && STATE.users[u].password === p) {
+    STATE.session = STATE.users[u]; saveSession(u); updateHeader();
+    if (STATE.session.isAdmin) document.getElementById('tab-admin-btn').classList.remove('hidden');
+    closeModal('modal-auth'); toast('Connected');
+  } else { document.getElementById('li-err').textContent = 'Bad credentials'; }
+}
+function doRegister() {
+  const u = document.getElementById('reg-user').value.trim(), p = document.getElementById('reg-pass').value;
+  if(u.length<3 || STATE.users[u]) return;
+  STATE.users[u] = { username: u, password: p, credits: parseInt(document.getElementById('reg-credits').value)||2000, watchlist: [], isAdmin: false };
+  saveUsers(); STATE.session = STATE.users[u]; saveSession(u); updateHeader(); closeModal('modal-auth');
+}
+function doLogout() { STATE.session = null; clearSession(); updateHeader(); document.getElementById('tab-admin-btn').classList.add('hidden'); switchTab('discover'); }
+function updateHeader() {
+  const c = document.getElementById('hdr-credits'), u = document.getElementById('hdr-user'), a = document.getElementById('hdr-admin'), btn = document.getElementById('hdr-auth-btn');
+  if(STATE.session) { btn.classList.add('hidden'); c.classList.remove('hidden'); c.textContent = STATE.session.credits + ' ◈'; u.classList.remove('hidden'); u.textContent = STATE.session.username.toUpperCase(); if(STATE.session.isAdmin) a.classList.remove('hidden'); }
+  else { c.classList.add('hidden'); u.classList.add('hidden'); a.classList.add('hidden'); btn.classList.remove('hidden'); }
+}
+
+// ROUTING
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  ['discover','bids','watchlist','account','admin'].forEach(t => { const el = document.getElementById('tab-' + t); if (el) el.classList.toggle('hidden', t !== name); });
+  if (name === 'discover') renderCards();
+  if (name === 'bids') renderBids();
+  if (name === 'watchlist') renderWatchlist();
+  if (name === 'account') renderAccount();
+  if (name === 'admin') renderAdmin();
+}
+function renderBids() {
+  const el = document.getElementById('bids-list'); if(!STATE.session) { el.innerHTML = 'Login required'; return; }
+  const b = Object.values(STATE.bids).filter(x=>x.username===STATE.session.username);
+  el.innerHTML = b.map(x => `<div class="row-item"><div class="row-info"><div class="row-name">${x.assetId}</div></div><div class="row-right"><div class="row-val">${x.amount} ◈</div></div></div>`).join('') || 'No active bids recorded.';
+}
+function renderWatchlist() {
+  const el = document.getElementById('watchlist-list'); if(!STATE.session) { el.innerHTML = 'Login required'; return; }
+  el.innerHTML = STATE.session.watchlist.map(x => `<div class="row-item"><div class="row-name">${x.name}</div></div>`).join('') || 'Watchlist empty';
+}
+function renderAccount() {
+  const el = document.getElementById('account-body'); if(!STATE.session) return;
+  el.innerHTML = `<div class="acct-card"><h3>${STATE.session.username.toUpperCase()}</h3><p style="margin:6px 0 12px">Balance Account Portfolio: ${STATE.session.credits} ◈</p><button class="btn-red" onclick="doLogout()">DISCONNECT PROFILE</button></div>`;
+}
+
+// ADMIN VIEW LAYOUT WITH FULL BIDS LOGS AND SYSTEM METRICS
+function renderAdmin() {
+  if (!STATE.session || !STATE.session.isAdmin) return;
+  
+  const sold = STATE.assets.filter(a => a.sold).length;
+  const active = STATE.assets.filter(a => !a.sold).length;
+  const totalBidsCount = Object.keys(STATE.bids).length;
+
+  document.getElementById('admin-stats').innerHTML = [
+    { label: 'Total Files', count: STATE.assets.length, color: 'var(--gold2)' },
+    { label: 'Active Status', count: active, color: 'var(--green2)' },
+    { label: 'Marked Sold', count: sold, color: 'var(--red2)' },
+    { label: 'Total Bid Items', count: totalBidsCount, color: 'var(--blue2)' }
+  ].map(s => `
+    <div class="admin-stat">
+      <div class="admin-stat-num" style="color:${s.color}">${s.count}</div>
+      <div class="admin-stat-lbl">${s.label}</div>
+    </div>`).join('');
+
+  document.getElementById('asset-grid').innerHTML = STATE.assets.map(a => {
+    const topBidder = getTopBid(a.id);
+    return `
+    <div class="asset-adm-card ${a.sold ? 'is-sold' : ''}">
+      <div class="adm-img" style="background:${a.c1}">
+        ${a.img ? `<img src="${a.img}">` : `<canvas id="adm-cv-${a.id}" width="280" height="200"></canvas>`}
+        ${a.sold ? `<div class="adm-sold-ov"><div class="adm-sold-stamp">SOLD</div></div>` : ''}
+      </div>
+      <div class="adm-body">
+        <div class="adm-name">${a.name}</div>
+        <div class="adm-sub">${a.subtitle}</div>
+        <div class="adm-meta">
+          <span>Min base: <b>${a.minBid} ◈</b></span>
+          <span>High Val: <b>${a.currentHigh} ◈</b></span>
+        </div>
+        ${a.sold ? `<div class="adm-sold-lbl">Acquired By: ${a.soldTo || 'Unknown'}</div>` : ''}
+        <div class="adm-btn-row">
+          <button class="adm-btn edit" onclick="openEditor('${a.id}')">MODIFY</button>
+          ${!a.sold ? 
+            `<button class="adm-btn" style="border-color:var(--red);color:var(--red2)" onclick="adminMarkSold('${a.id}')">MARK SOLD</button>` : 
+            `<button class="adm-btn relist" onclick="adminRelist('${a.id}')">RELIST</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const bidsWrap = document.getElementById('admin-bids-wrap');
+  const bidKeys = Object.keys(STATE.bids);
+
+  if (bidKeys.length === 0) {
+    bidsWrap.innerHTML = `<div class="empty-msg">No active bids found on the registry files server logs.</div>`;
+  } else {
+    bidsWrap.innerHTML = `
+      <table class="bids-table">
+        <thead>
+          <tr>
+            <th>Asset Target</th>
+            <th>Slayer Account</th>
+            <th>Offered Value</th>
+            <th>Listing Context</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${bidKeys.map(id => {
+            const b = STATE.bids[id];
+            const originalAsset = STATE.assets.find(x => x.id === id);
+            if (!originalAsset) return '';
+            return `
+              <tr>
+                <td style="color:var(--gold2);font-weight:600">${originalAsset.name}</td>
+                <td>${b.username}</td>
+                <td style="color:var(--gold2)">${b.amount.toLocaleString()} ◈</td>
+                <td><span class="st ${originalAsset.sold ? 'st-sold' : 'st-lead'}">${originalAsset.sold ? 'SOLD BOUND' : 'ACTIVE HIGH'}</span></td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  requestAnimationFrame(() => {
+    STATE.assets.forEach(a => { if (!a.img) { const cv = document.getElementById('adm-cv-' + a.id); if (cv) drawCanvas(cv, a); } });
+  });
+}
+
+function adminMarkSold(id) {
+  const asset = STATE.assets.find(x => x.id === id); if (!asset) return;
+  const topBid = getTopBid(id);
+  asset.sold = true;
+  asset.soldTo = topBid ? topBid.username : 'Foundation Dispatch';
+  saveAssets(); renderAdmin(); renderCards(); toast('Asset lifecycle committed as SOLD.');
+}
+
+function adminRelist(id) {
+  const asset = STATE.assets.find(x => x.id === id); if (!asset) return;
+  asset.sold = false;
+  asset.soldTo = '';
+  delete STATE.bids[id];
+  asset.currentHigh = asset.minBid;
+  saveAssets(); saveData('slayr_bids', STATE.bids);
+  renderAdmin(); renderCards(); toast('Asset relisted to dispatch boards!');
+}
+
+// DYNAMIC FILE CREATION / EDITING SUITE CONTROLS
+function openEditor(id) {
+  let asset;
+  if (id === null || id === undefined) {
+    asset = {
+      id: 'asset_' + Date.now(),
+      name: '',
+      subtitle: '',
+      cls: 'EPIC',
+      threat: 'SSS',
+      core: '',
+      quote: '',
+      attrs: [],
+      cs: 'water',
+      c1: '#0a1a3a',
+      c2: '#1a3a6a',
+      c3: '#3a6aaa',
+      img: null,
+      emoji: '⚔️',
+      minBid: 200,
+      currentHigh: 0,
+      sold: false,
+      soldTo: ''
+    };
+    STATE.editor.isNew = true;
+  } else {
+    asset = STATE.assets.find(a => a.id === id);
+    if (!asset) return;
+    STATE.editor.isNew = false;
+  }
+
+  STATE.editor.asset = { ...asset };
+  STATE.editor.attrs = [...asset.attrs];
+  STATE.editor.img = asset.img || null;
+  
+  document.getElementById('editor-body').innerHTML = buildEditorHTML(STATE.editor.asset);
+  
+  const titleEl = document.querySelector('#modal-editor .mtitle');
+  if (titleEl) {
+    titleEl.textContent = STATE.editor.isNew ? '✨ CREATE NEW ASSET — ADMIN' : '✏ EDIT ASSET — ADMIN';
+  }
+  
+  const saveBtn = document.querySelector('#modal-editor .btn-gold');
+  if (saveBtn) {
+    saveBtn.textContent = STATE.editor.isNew ? 'CREATE ASSET' : 'SAVE CHANGES';
+  }
+
+  openModal('modal-editor');
+
+  requestAnimationFrame(() => {
+    CS_STYLES.forEach(s => {
+      const cv = document.getElementById('mini-cs-' + s);
+      if (cv) drawCanvas(cv, { ...STATE.editor.asset, cs: s });
+    });
+  });
+  renderEditorAttrs();
+}
+
+function buildEditorHTML(a) {
+  return `
+    <div class="esec">
+      <div class="esec-title">Portrait Media</div>
+      <div style="display:flex;gap:12px">
+        <div style="flex:1">
+          <div class="img-drop" id="editor-img-drop">
+            ${STATE.editor.img ? `<img class="img-drop-preview" id="editor-img-preview" src="${STATE.editor.img}">` : ''}
+            <div id="editor-img-hint" ${STATE.editor.img?'style="display:none"':''}>
+              <div>📷</div><div style="font-size:10px;margin-top:4px">LOAD FILE DISPATCH</div>
+            </div>
+            <input type="file" accept="image/*" onchange="onEditorImgUpload(event)">
+          </div>
+          ${STATE.editor.img ? `<button class="btn-ghost-red" style="width:100%;margin-top:6px;font-size:10px;padding:4px" onclick="clearEditorImg()">✕ REMOVE IMAGE</button>` : ''}
+        </div>
+        <div style="flex:1">
+          <label>Canvas System Theme</label>
+          <div class="cs-grid">
+            ${CS_STYLES.map(s => `<div class="cs-tile ${(a.cs||'water')===s?'sel':''}" onclick="selectCS('${s}')"><canvas id="mini-cs-${s}" width="56" height="42"></canvas></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="esec">
+      <div class="efield"><label>Core Identity Name</label><input type="text" id="edit-name" value="${a.name||''}"></div>
+      <div class="efield"><label>Subtitle Title</label><input type="text" id="edit-sub" value="${a.subtitle||''}"></div>
+      <div class="efield"><label>Domain Elements</label><input type="text" id="edit-core" value="${a.core||''}"></div>
+      <div class="efield"><label>Base Value Request</label><input type="number" id="edit-minbid" value="${a.minBid||200}"></div>
+      <div class="efield"><label>Dialogue Logs</label><textarea id="edit-quote">${a.quote||''}</textarea></div>
+    </div>
+    <div class="esec">
+      <label>Indicators Selection</label>
+      <div class="toggle-group" id="cls-group">${CLS_LIST.map(c=>`<button class="tog-btn ${a.cls===c?'act-gold':''}" onclick="toggleCLS(this,'${c}')">${c}</button>`).join('')}</div>
+      <div class="toggle-group" id="thr-group" style="margin-top:6px">${THR_LIST.map(t=>`<button class="tog-btn ${a.threat===t?'act-red':''}" onclick="toggleTHR(this,'${t}')">${t}</button>`).join('')}</div>
+    </div>
+    <div class="mbody" style="display:flex;gap:6px;background:var(--surface2)">
+      <button class="btn-gold" onclick="saveEditor()">COMMIT EDITS</button>
+      <button class="btn-ghost" onclick="closeModal('modal-editor')">ABORT</button>
+    </div>`;
+}
+
+function onEditorImgUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    STATE.editor.img = ev.target.result;
+    let prev = document.getElementById('editor-img-preview');
+    const area = document.getElementById('editor-img-drop');
+    const hint = document.getElementById('editor-img-hint');
+    
+    if (!prev) {
+      prev = document.createElement('img');
+      prev.className = 'img-drop-preview';
+      prev.id = 'editor-img-preview';
+      area.prepend(prev); 
+    }
+    prev.src = ev.target.result;
+    if (hint) hint.style.display = 'none';
+    document.getElementById('editor-body').innerHTML = buildEditorHTML(STATE.editor.asset);
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearEditorImg() { STATE.editor.img = null; document.getElementById('editor-body').innerHTML = buildEditorHTML(STATE.editor.asset); }
+function renderEditorAttrs() {}
+function selectCS(s) { STATE.editor.asset.cs = s; document.getElementById('editor-body').innerHTML = buildEditorHTML(STATE.editor.asset); }
+function toggleCLS(b,c) { document.querySelectorAll('#cls-group .tog-btn').forEach(x=>x.classList.remove('act-gold')); b.classList.add('act-gold'); }
+function toggleTHR(b,t) { document.querySelectorAll('#thr-group .tog-btn').forEach(x=>x.classList.remove('act-red')); b.classList.add('act-red'); }
+
+function saveEditor() {
+  const ea = STATE.editor.asset;
+  if (!ea) return;
+
+  ea.name = document.getElementById('edit-name').value.trim() || 'Unnamed Asset';
+  ea.subtitle = document.getElementById('edit-sub').value.trim() || '';
+  ea.core = document.getElementById('edit-core').value.trim() || '';
+  ea.quote = document.getElementById('edit-quote').value.trim() || '';
+  ea.minBid = parseInt(document.getElementById('edit-minbid').value) || 200;
+
+  const clsAct = document.querySelector('#cls-group .act-gold');
+  ea.cls = clsAct ? clsAct.textContent.trim() : 'EPIC';
+
+  const thrAct = document.querySelector('#thr-group .act-red');
+  ea.threat = thrAct ? thrAct.textContent.trim().replace('⚠ ', '') : 'SSS';
+
+  ea.attrs = [...STATE.editor.attrs];
+  ea.img = STATE.editor.img;
+
+  if (STATE.editor.isNew) {
+    ea.currentHigh = ea.minBid;
+    STATE.assets.push(ea);
+    toast(`Asset "${ea.name}" created successfully!`);
+  } else {
+    const idx = STATE.assets.findIndex(x => x.id === ea.id);
+    if (idx !== -1) {
+      STATE.assets[idx] = ea;
+      toast('Changes saved successfully');
+    }
+  }
+
+  saveAssets();
+  closeModal('modal-editor');
+  renderCards();
+  renderAdmin();
+}
+
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+document.querySelectorAll('.modal-bg').forEach(bg => { bg.addEventListener('click', e => { if (e.target === bg) closeModal(bg.id); }); });
+window.addEventListener('DOMContentLoaded', () => { updateHeader(); if(STATE.session&&STATE.session.isAdmin) document.getElementById('tab-admin-btn').classList.remove('hidden'); renderCards(); });
+</script>
+</body>
+</html>
